@@ -1,0 +1,45 @@
+pipeline {
+    agent any
+
+    environment {
+        // Define the Maven home directory
+        MAVEN_HOME = 'C:\\Users\\balik\\Downloads\\apache-maven-3.9.5-bin\\apache-maven-3.9.5'
+        // Define the JDK home directory
+        JAVA_HOME = 'C:\\Program Files\\Java\\jdk-17'
+        SONAR_HOST_URL ='http://134.122.8.201:9000'
+        SONAR_USERNAME = 'admin' // Replace with your SonarQube username
+        SONAR_PASSWORD ='balike'
+    }
+
+    stages {
+        stage('Clone Repository') {
+            steps {
+                // Clone from the 'main' branch explicitly
+                git branch: 'main', url: 'https://github.com/balike2019/landmarks-web-app.git'
+            }
+        }
+        
+        stage('Test and Build') {
+            steps {
+                // Run Maven command to clean and package the project
+                bat "\"${MAVEN_HOME}\\bin\\mvn\" clean package"
+            }
+        }
+        stage('SonarQube Analysis') {
+            steps {
+                // Run SonarQube analysis using SonarScanner with authentication
+                bat "\"${MAVEN_HOME}\\bin\\mvn\" sonar:sonar -Dsonar.host.url=${SONAR_HOST_URL} -Dsonar.login=${SONAR_USERNAME} -Dsonar.password=${SONAR_PASSWORD}"
+            }
+        }
+     stage('emailNotification') {
+    steps {
+        emailext body: '''Hi All,
+Check build
+Balikesoft technologies''',
+            recipientProviders: [developers(), buildUser(), contributor()],
+            subject: 'build status',
+            to: 'anna.balike36@gmail.com'
+    }
+}
+}
+}
